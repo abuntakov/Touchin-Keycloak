@@ -10,32 +10,13 @@ EOF
 SECRET_NAME=`echo "$ENV_DOMAIN.tls" | tr "." "-"`
 
 cat <<-EOF > ./build-values.yml
-profile: $DEPLOY_ENV
-image:
-  repository: %APP_IMAGE_NAME%
-  tag: $APP_VERSION
-
-ingress:
-  hosts:
-    - "$DEPLOY_DOMAIN"
-  tls:
-    - secretName: $SECRET_NAME
-      hosts:
-        - "*.$ENV_DOMAIN"
-        - "$DEPLOY_DOMAIN"
+keycloak:
+  image:
+    repository: %APP_IMAGE_NAME%
+    tag: $APP_VERSION
 EOF
 
 FULL_APP_NAME=`echo "$DEPLOY_DOMAIN" | tr "." "-"`
-
-if [ -f "deploy/%APP_NAME%/values-$DEPLOY_ENV.yaml" ]; then
-  cat "deploy/%APP_NAME%/values-$DEPLOY_ENV.yaml" >> ./build-values.yml
-fi
-
-DB_NAME_POSTFIX=""
-
-if [ ! "$MILESTONE_NAME" == "" ]; then
-  DB_NAME_POSTFIX="__${MILESTONE_NAME}"
-fi
 
 RELEASE_NAME=$DEPLOY_DOMAIN
 
@@ -46,12 +27,11 @@ fi
 
 if [[ $DEPLOY == "yes" ]]; then
   helm upgrade --install $RELEASE_NAME \
-    ./%APP_NAME%-$APP_VERSION.tgz \
+    codecentric/keycloak \
     --values=./build-values.yml \
     --namespace $DEPLOY_ENV \
-    --set db.namePostfix=$DB_NAME_POSTFIX \
-    --set server.url=$SERVER_URL \
-    --set fullnameOverride=$FULL_APP_NAME \
+    --set keycloak.username=admin \
+    --set keycloak.password=qwerty \
     --debug \
     --kubeconfig kube.config \
     --wait
