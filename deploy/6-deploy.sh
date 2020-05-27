@@ -7,6 +7,7 @@ cat <<-EOF > kube.config
 %KUBE_TOKEN%
 EOF
 
+# Unused
 SECRET_NAME=`echo "$ENV_DOMAIN.tls" | tr "." "-"`
 
 cat <<-EOF > ./build-values.yml
@@ -14,6 +15,8 @@ keycloak:
   image:
     repository: %APP_IMAGE_NAME%
     tag: $APP_VERSION
+  username: %KEYCLOAK_ADMIN_USERNAME%
+  password: %KEYCLOAK_ADMIN_PASSWORD%
 EOF
 
 FULL_APP_NAME=`echo "$DEPLOY_DOMAIN" | tr "." "-"`
@@ -30,8 +33,6 @@ if [[ $DEPLOY == "yes" ]]; then
     codecentric/keycloak \
     --values=./build-values.yml \
     --namespace $DEPLOY_ENV \
-    --set keycloak.username=admin \
-    --set keycloak.password=qwerty \
     --debug \
     --kubeconfig kube.config \
     --wait
